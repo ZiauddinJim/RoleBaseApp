@@ -1,3 +1,5 @@
+// TODO: Register DTO for user registration
+
 public class RegisterDto
 {
     public string Name { get; set; }
