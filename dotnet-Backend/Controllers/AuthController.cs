@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
+using Microsoft.AspNetCore.Authorization;
+using MongoDB.Driver;
 
 // CONTROLLER: Handles authentication (Register & Login)
 [ApiController]
@@ -36,15 +38,15 @@ public class AuthController : ControllerBase
         var existing = await _db.Users.Find(x => x.Email == dto.Email).FirstOrDefaultAsync();
         if (existing != null)
             return BadRequest("Email already exists");
-
+        var assignedRole = "User";
+        if (dto.Role == "Admin") assignedRole = "Admin";
+        
         var user = new User
         {
             Name = dto.Name,
             Email = dto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-
-            // Always default role
-            Role = "User"
+            Role = assignedRole
         };
 
         await _db.Users.InsertOneAsync(user);
@@ -68,7 +70,15 @@ public class AuthController : ControllerBase
         // GENERATE: JWT Token
         var token = _jwt.GenerateToken(user);
 
-        // RETURN: Token + Role
-        return Ok(new { token, role = user.Role });
+        // RETURN: Token + Role + UserId
+        return Ok(new { token, role = user.Role, userId = user.Id });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("users/count")]
+    public async Task<IActionResult> GetUsersCount()
+    {
+        var count = await _db.Users.CountDocumentsAsync(_ => true);
+        return Ok(new { totalUsers = count });
     }
 }

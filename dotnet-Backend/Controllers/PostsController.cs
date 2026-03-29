@@ -18,28 +18,13 @@ public class PostsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetPosts()
     {
-        var role = User.FindFirst(ClaimTypes.Role)?.Value;
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (userId == null) return Unauthorized();
-
-        if (role == "Admin" || role == "Manager")
-        {
-            var posts = await _db.Posts.Find(_ => true)
-                .SortByDescending(x => x.CreatedAt)
-                .ToListAsync();
-
-            return Ok(posts);
-        }
-
-        var userPosts = await _db.Posts.Find(x => x.CreatedByUserId == userId)
+        var posts = await _db.Posts.Find(_ => true)
             .SortByDescending(x => x.CreatedAt)
             .ToListAsync();
-
-        return Ok(userPosts);
+            
+        return Ok(posts);
     }
 
-    [Authorize(Roles = "Admin,Manager")]
     [HttpPost]
     public async Task<IActionResult> CreatePost([FromBody] CreatePostDto dto)
     {
