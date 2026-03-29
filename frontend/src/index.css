@@ -1,9 +1,12 @@
 @import "tailwindcss";
 
+/* Enable class-based manual dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Optional: custom tweaks */
 
 body {
-  @apply bg-gray-100 text-gray-800;
+  @apply bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-200;
 }
 
 /* Scrollbar (optional clean UI) */
