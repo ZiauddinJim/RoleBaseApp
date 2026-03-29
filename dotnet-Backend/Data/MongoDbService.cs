@@ -20,4 +20,8 @@ public class MongoDbService
     // IMongoCollection<User> means this collection stores User documents
     public IMongoCollection<User> Users =>
         _database.GetCollection<User>("Users");
+
+    // Property to access "Posts" collection
+    public IMongoCollection<Post> Posts =>
+        _database.GetCollection<Post>("Posts");
 }

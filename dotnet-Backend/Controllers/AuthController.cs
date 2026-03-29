@@ -25,28 +25,31 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
     {
-        // CHECK: Email already exists কিনা
+        // Validation
+        if (string.IsNullOrWhiteSpace(dto.Name) ||
+            string.IsNullOrWhiteSpace(dto.Email) ||
+            string.IsNullOrWhiteSpace(dto.Password))
+        {
+            return BadRequest("All fields are required");
+        }
+
         var existing = await _db.Users.Find(x => x.Email == dto.Email).FirstOrDefaultAsync();
         if (existing != null)
             return BadRequest("Email already exists");
 
-        // CREATE: New user object
         var user = new User
         {
             Name = dto.Name,
             Email = dto.Email,
-
-            // SECURITY: Password hashing using BCrypt
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
 
-            // DEFAULT ROLE
+            // Always default role
             Role = "User"
         };
 
-        // SAVE: Insert user into MongoDB
         await _db.Users.InsertOneAsync(user);
 
-        return Ok("User registered");
+        return Ok(new { message = "User registered successfully" });
     }
 
 
