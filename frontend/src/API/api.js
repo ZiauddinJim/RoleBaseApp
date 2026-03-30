@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-    baseURL: "https://rolebaseapp-5p6e.onrender.com/api"
+    baseURL: import.meta.env.VITE_API_URL || "https://rolebaseapp-5p6e.onrender.com/api"
 });
 
 API.interceptors.request.use((req) => {
