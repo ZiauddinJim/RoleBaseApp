@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { Mail, Eye, EyeOff, Lock } from "lucide-react";
 import API from "../API/api";
 import ThemeToggle from "../components/ThemeToggle";
+import Swal from "sweetalert2";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
   // Authenticate user against API
   const onSubmit = async (data) => {
@@ -27,7 +28,15 @@ const Login = () => {
       login(res.data.token, res.data.role, res.data.userId, res.data.name, res.data.email);
       navigate("/");
     } catch (err) {
-      setError(err.response?.data || "Login failed");
+      // Show error dialog instead of inline error
+      Swal.fire({
+        icon: "error",
+        title: "Login Failed",
+        text: err.response?.data || "Invalid email or password.",
+        confirmButtonColor: "#4f46e5",
+        background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#fff",
+        color: document.documentElement.classList.contains("dark") ? "#f3f4f6" : "#111827",
+      });
     } finally {
       setLoading(false);
     }
@@ -43,12 +52,6 @@ const Login = () => {
         <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">RoleBase</h2>
         <p className="text-gray-500 dark:text-gray-400 mb-6">Sign in to your account</p>
 
-        {error && (
-          <div className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 p-3 rounded mb-4 text-sm">
-            {error}
-          </div>
-        )}
-
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Email */}
           <div>
@@ -56,11 +59,20 @@ const Login = () => {
             <div className="relative mt-1">
               <Mail className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" size={18} />
               <input
-                {...register("email")}
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Enter a valid email address",
+                  },
+                })}
                 className="w-full pl-10 py-2 border dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500 outline-none bg-transparent text-gray-900 dark:text-gray-100 transition-colors duration-200"
                 placeholder="you@example.com"
               />
             </div>
+            {errors.email && (
+              <p className="text-red-500 dark:text-red-400 text-xs mt-1">{errors.email.message}</p>
+            )}
           </div>
 
           {/* Password */}
@@ -70,9 +82,21 @@ const Login = () => {
               <Lock className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" size={18} />
               <input
                 type={showPassword ? "text" : "password"}
-                {...register("password")}
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: {
+                    value: 6,
+                    message: "Password must be at least 6 characters",
+                  },
+                  validate: {
+                    hasLetter: (val) =>
+                      /[a-zA-Z]/.test(val) || "Password must contain at least one letter",
+                    hasNumber: (val) =>
+                      /[0-9]/.test(val) || "Password must contain at least one number",
+                  },
+                })}
                 className="w-full pl-10 pr-10 py-2 border dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500 outline-none bg-transparent text-gray-900 dark:text-gray-100 transition-colors duration-200"
-                placeholder="••••••"
+                placeholder="Min 6 chars, 1 letter, 1 number"
               />
               <span
                 onClick={() => setShowPassword(!showPassword)}
@@ -81,6 +105,9 @@ const Login = () => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </span>
             </div>
+            {errors.password && (
+              <p className="text-red-500 dark:text-red-400 text-xs mt-1">{errors.password.message}</p>
+            )}
           </div>
 
           <button
