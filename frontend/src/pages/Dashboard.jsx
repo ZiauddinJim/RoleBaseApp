@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { LayoutDashboard, FileText, LogOut, Plus, Users } from "lucide-react";
 import API from "../API/api";
+import Swal from "sweetalert2";
 import PostList from "../components/PostList";
 import PostGrid from "../components/PostGrid";
 import PostModal from "../components/PostModal";
@@ -59,13 +60,44 @@ const Dashboard = () => {
     setIsModalOpen(true);
   };
 
+  // Delete confirmation with SweetAlert2
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this post?")) return;
+    const result = await Swal.fire({
+      title: "Delete Post?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#4f46e5",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+      background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#fff",
+      color: document.documentElement.classList.contains("dark") ? "#f3f4f6" : "#111827",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       await API.delete(`/posts/${id}`);
       fetchData();
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "The post has been removed.",
+        timer: 1800,
+        showConfirmButton: false,
+        background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#fff",
+        color: document.documentElement.classList.contains("dark") ? "#f3f4f6" : "#111827",
+      });
     } catch (err) {
-      alert("Failed to delete post. " + (err.response?.data?.message || ""));
+      Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: err.response?.data?.message || "Could not delete the post.",
+        confirmButtonColor: "#4f46e5",
+        background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#fff",
+        color: document.documentElement.classList.contains("dark") ? "#f3f4f6" : "#111827",
+      });
     }
   };
 

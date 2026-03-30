@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import API from "../API/api";
+import Swal from "sweetalert2";
 
 const PostModal = ({ post, onClose, onRefresh }) => {
   const isEditing = !!post;
@@ -34,10 +35,28 @@ const PostModal = ({ post, onClose, onRefresh }) => {
       }
       onRefresh();
       onClose();
+      // Show success toast
+      Swal.fire({
+        icon: "success",
+        title: isEditing ? "Post Updated!" : "Post Published!",
+        text: isEditing ? "Your changes have been saved." : "Your new post is live.",
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: "top-end",
+        background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#fff",
+        color: document.documentElement.classList.contains("dark") ? "#f3f4f6" : "#111827",
+      });
     } catch (err) {
-      setError(
-        err.response?.data?.message || err.response?.data || "Failed to save post"
-      );
+      // Show error alert
+      Swal.fire({
+        icon: "error",
+        title: "Save Failed",
+        text: err.response?.data?.message || err.response?.data || "An error occurred while saving.",
+        confirmButtonColor: "#4f46e5",
+        background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#fff",
+        color: document.documentElement.classList.contains("dark") ? "#f3f4f6" : "#111827",
+      });
     } finally {
       setLoading(false);
     }
