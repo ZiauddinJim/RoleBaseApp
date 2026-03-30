@@ -17,7 +17,15 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [activeTab, setActiveTab] = useState("my_posts"); // useful for User role
-  const [activeMenu, setActiveMenu] = useState("dashboard"); // sidebar navigation
+  
+  // Sidebar navigation state synced with localStorage to survive page reloads
+  const [activeMenu, setActiveMenu] = useState(
+    localStorage.getItem("activeMenu") || "dashboard"
+  );
+  
+  useEffect(() => {
+    localStorage.setItem("activeMenu", activeMenu);
+  }, [activeMenu]);
 
   const fetchData = async () => {
     try {
