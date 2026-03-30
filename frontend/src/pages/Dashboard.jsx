@@ -18,12 +18,12 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [activeTab, setActiveTab] = useState("my_posts"); // useful for User role
-  
+
   // Sidebar navigation state synced with localStorage to survive page reloads
   const [activeMenu, setActiveMenu] = useState(
     localStorage.getItem("activeMenu") || "dashboard"
   );
-  
+
   useEffect(() => {
     localStorage.setItem("activeMenu", activeMenu);
   }, [activeMenu]);
@@ -107,11 +107,11 @@ const Dashboard = () => {
   };
 
   const isAdmin = role === "Admin";
-  
+
   // RBAC logic: Controls how posts are displayed to the user based on active tab
   // Admins always see all posts natively in the current view pipeline.
-  const displayedPosts = isAdmin 
-    ? posts 
+  const displayedPosts = isAdmin
+    ? posts
     : (activeTab === "my_posts" ? posts.filter((p) => p.createdByUserId === userId) : posts);
 
   // Calculate user-specific metrics for the dashboard summary
@@ -119,32 +119,29 @@ const Dashboard = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
-      
+
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:flex flex-col transition-colors duration-200">
         <div className="p-6 text-xl font-bold text-indigo-600 dark:text-indigo-400">
-          RoleBase Dashboard
-        </div>
+          Post Management </div>
 
         {/* Sidebar Navigation logic for switching tabs */}
         <nav className="flex-1 px-4 space-y-2">
-          <a 
+          <a
             onClick={() => setActiveMenu("dashboard")}
-            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-              activeMenu === "dashboard" 
-                ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400"
-                : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-            }`}
+            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${activeMenu === "dashboard"
+              ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400"
+              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
           >
             <LayoutDashboard size={18} /> Dashboard
           </a>
-          <a 
+          <a
             onClick={() => setActiveMenu("posts")}
-            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-              activeMenu === "posts" 
-                ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400"
-                : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-            }`}
+            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${activeMenu === "posts"
+              ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400"
+              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
           >
             <FileText size={18} /> Posts
           </a>
@@ -158,11 +155,10 @@ const Dashboard = () => {
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
               {userEmail || "user@example.com"}
             </p>
-            <span className={`inline-block mt-2 px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded border ${
-              role === "Admin"
-                ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800"
-                : "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
-            }`}>
+            <span className={`inline-block mt-2 px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded border ${role === "Admin"
+              ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800"
+              : "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+              }`}>
               {role} Account
             </span>
           </div>
@@ -186,12 +182,11 @@ const Dashboard = () => {
 
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            
-            <span className={`px-3 py-1 text-xs rounded font-semibold border ${
-              isAdmin 
-                ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400 dark:border-purple-800 border-transparent'
-                : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 dark:border-green-800 border-transparent'
-            }`}>
+
+            <span className={`px-3 py-1 text-xs rounded font-semibold border ${isAdmin
+              ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400 dark:border-purple-800 border-transparent'
+              : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 dark:border-green-800 border-transparent'
+              }`}>
               {role}
             </span>
 
@@ -210,65 +205,63 @@ const Dashboard = () => {
           {/* Stats - Only visible on Dashboard menu */}
           {activeMenu === "dashboard" && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {isAdmin ? (
-              <>
-                <div className="bg-white dark:bg-gray-800 p-4 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
-                  <p className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2"><Users size={16} /> Total Users</p>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{totalUsers}</h2>
-                </div>
-                <div className="bg-white dark:bg-gray-800 p-4 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
-                  <p className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2"><FileText size={16} /> Total Posts</p>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{posts.length}</h2>
-                </div>
-                <div className="bg-white dark:bg-gray-800 p-4 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">Role Privilege</p>
-                  <h2 className="text-xl font-bold text-purple-600 dark:text-purple-400 mt-1">Full Control</h2>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="bg-white dark:bg-gray-800 p-4 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
-                  <p className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2"><FileText size={16} /> My Posts</p>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{myPostsCount}</h2>
-                </div>
-                <div className="bg-white dark:bg-gray-800 p-4 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">Platform Total Posts</p>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{posts.length}</h2>
-                </div>
-                <div className="bg-white dark:bg-gray-800 p-4 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">Role Privilege</p>
-                  <h2 className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">Manage Own</h2>
-                </div>
-              </>
-            )}
-          </div>
+              {isAdmin ? (
+                <>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2"><Users size={16} /> Total Users</p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{totalUsers}</h2>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2"><FileText size={16} /> Total Posts</p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{posts.length}</h2>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Role Privilege</p>
+                    <h2 className="text-xl font-bold text-purple-600 dark:text-purple-400 mt-1">Full Control</h2>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2"><FileText size={16} /> My Posts</p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{myPostsCount}</h2>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Platform Total Posts</p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{posts.length}</h2>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Role Privilege</p>
+                    <h2 className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">Manage Own</h2>
+                  </div>
+                </>
+              )}
+            </div>
           )}
 
           {/* Table */}
           <div className="bg-white dark:bg-gray-800 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4">
-              
+
               {isAdmin ? (
                 <h2 className="font-semibold text-gray-800 dark:text-gray-100">Recent Posts</h2>
               ) : (
                 <div className="flex bg-gray-100 dark:bg-gray-700/50 rounded p-1">
                   <button
                     onClick={() => setActiveTab("my_posts")}
-                    className={`px-4 py-1.5 text-sm font-medium rounded ${
-                      activeTab === "my_posts"
-                        ? "bg-white dark:bg-gray-600 shadow text-gray-900 dark:text-gray-100"
-                        : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                    }`}
+                    className={`px-4 py-1.5 text-sm font-medium rounded ${activeTab === "my_posts"
+                      ? "bg-white dark:bg-gray-600 shadow text-gray-900 dark:text-gray-100"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                      }`}
                   >
                     My Posts
                   </button>
                   <button
                     onClick={() => setActiveTab("all_posts")}
-                    className={`px-4 py-1.5 text-sm font-medium rounded ${
-                      activeTab === "all_posts"
-                        ? "bg-white dark:bg-gray-600 shadow text-gray-900 dark:text-gray-100"
-                        : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                    }`}
+                    className={`px-4 py-1.5 text-sm font-medium rounded ${activeTab === "all_posts"
+                      ? "bg-white dark:bg-gray-600 shadow text-gray-900 dark:text-gray-100"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                      }`}
                   >
                     All Posts
                   </button>
