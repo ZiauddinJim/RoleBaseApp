@@ -20,7 +20,7 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await API.post("/auth/login", data);
-      login(res.data.token, res.data.role);
+      login(res.data.token, res.data.role, res.data.userId);
       navigate("/");
     } catch (err) {
       setError(err.response?.data || "Login failed");

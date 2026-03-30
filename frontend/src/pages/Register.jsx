@@ -75,6 +75,20 @@ const Register = () => {
             {errors.email && <p className="text-red-500 dark:text-red-400 text-xs mt-1">{errors.email.message}</p>}
           </div>
 
+          {/* Role Selection */}
+          <div>
+            <label className="text-sm font-semibold text-gray-500 dark:text-gray-400">Select Role</label>
+            <div className="relative mt-1">
+              <select
+                {...register("role")}
+                className="w-full px-3 py-2 border dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500 outline-none bg-transparent text-gray-900 dark:text-gray-100 transition-colors duration-200"
+              >
+                <option value="User" className="text-gray-900 dark:text-gray-100 dark:bg-gray-800">User</option>
+                <option value="Admin" className="text-gray-900 dark:text-gray-100 dark:bg-gray-800">Admin</option>
+              </select>
+            </div>
+          </div>
+
           {/* Password */}
           <div>
             <label className="text-sm font-semibold text-gray-500 dark:text-gray-400">Password</label>
