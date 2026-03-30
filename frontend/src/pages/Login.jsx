@@ -15,12 +15,16 @@ const Login = () => {
 
   const { register, handleSubmit } = useForm();
 
+  // Authenticate user against API
   const onSubmit = async (data) => {
     setError("");
     setLoading(true);
     try {
+      // API call initiates credentials validation
       const res = await API.post("/auth/login", data);
-      login(res.data.token, res.data.role, res.data.userId);
+      
+      // Update global context with incoming JWT and privilege identifiers
+      login(res.data.token, res.data.role, res.data.userId, res.data.name, res.data.email);
       navigate("/");
     } catch (err) {
       setError(err.response?.data || "Login failed");
@@ -36,7 +40,7 @@ const Login = () => {
       </div>
       
       <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-transparent dark:border-gray-700 transition-colors duration-200">
-        <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">📋 RoleBase</h2>
+        <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">RoleBase</h2>
         <p className="text-gray-500 dark:text-gray-400 mb-6">Sign in to your account</p>
 
         {error && (

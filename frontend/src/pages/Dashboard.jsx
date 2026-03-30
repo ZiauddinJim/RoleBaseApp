@@ -9,7 +9,7 @@ import PostModal from "../components/PostModal";
 import ThemeToggle from "../components/ThemeToggle";
 
 const Dashboard = () => {
-  const { role, userId, logout, token } = useAuth();
+  const { role, userId, userName, userEmail, logout, token } = useAuth();
   const navigate = useNavigate();
 
   const [posts, setPosts] = useState([]);
@@ -68,11 +68,13 @@ const Dashboard = () => {
 
   const isAdmin = role === "Admin";
   
-  // Filter posts if user depending on tab
+  // RBAC logic: Controls how posts are displayed to the user based on active tab
+  // Admins always see all posts natively in the current view pipeline.
   const displayedPosts = isAdmin 
     ? posts 
     : (activeTab === "my_posts" ? posts.filter((p) => p.createdByUserId === userId) : posts);
 
+  // Calculate user-specific metrics for the dashboard summary
   const myPostsCount = posts.filter(p => p.createdByUserId === userId).length;
 
   return (
@@ -81,9 +83,10 @@ const Dashboard = () => {
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:flex flex-col transition-colors duration-200">
         <div className="p-6 text-xl font-bold text-indigo-600 dark:text-indigo-400">
-          📋 RoleBase
+          RoleBase Dashboard
         </div>
 
+        {/* Sidebar Navigation logic for switching tabs */}
         <nav className="flex-1 px-4 space-y-2">
           <a 
             onClick={() => setActiveMenu("dashboard")}
@@ -107,13 +110,25 @@ const Dashboard = () => {
           </a>
         </nav>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="mb-3 text-sm text-gray-600 dark:text-gray-400">
-            <p className="font-semibold">{role} Account</p>
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+          <div className="mb-4">
+            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">
+              {userName || "Dashboard User"}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              {userEmail || "user@example.com"}
+            </p>
+            <span className={`inline-block mt-2 px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded border ${
+              role === "Admin"
+                ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800"
+                : "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+            }`}>
+              {role} Account
+            </span>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 border dark:border-gray-600 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+            className="w-full flex items-center justify-center gap-2 border dark:border-gray-600 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors text-sm font-medium"
           >
             <LogOut size={16} /> Logout
           </button>

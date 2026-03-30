@@ -5,7 +5,7 @@ using System.Security.Claims;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize] // Must be logged in
+[Authorize] // All routes here require the user to be logged in via valid JWT token
 public class PostsController : ControllerBase
 {
     private readonly MongoDbService _db;
@@ -15,6 +15,9 @@ public class PostsController : ControllerBase
         _db = db;
     }
 
+    // GET: /api/posts
+    // Retrieves a descending list of all posts.
+    // Dashboard frontend will filter the presentation of these records based on user role.
     [HttpGet]
     public async Task<IActionResult> GetPosts()
     {
@@ -25,6 +28,8 @@ public class PostsController : ControllerBase
         return Ok(posts);
     }
 
+    // POST: /api/posts
+    // Creates a new post. Both Admin and User roles are authorized to create new records.
     [HttpPost]
     public async Task<IActionResult> CreatePost([FromBody] CreatePostDto dto)
     {
@@ -46,6 +51,8 @@ public class PostsController : ControllerBase
     }
 
     [Authorize]
+    // PUT: /api/posts/{id}
+    // Edits a post. Users can only edit their own post. Admins can edit any post.
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdatePost(string id, [FromBody] UpdatePostDto dto)
     {
@@ -57,7 +64,8 @@ public class PostsController : ControllerBase
         var post = await _db.Posts.Find(x => x.Id == id).FirstOrDefaultAsync();
         if (post == null) return NotFound("Post not found");
 
-        //  FIXED LOGIC
+        // Role Authorization Check: 
+        // Blocks the update if the user isn't an Admin AND doesn't own the post
         if (role != "Admin" && post.CreatedByUserId != userId)
         {
             return Forbid("You can only edit your own posts.");
@@ -75,6 +83,8 @@ public class PostsController : ControllerBase
     }
 
     [Authorize]
+    // DELETE: /api/posts/{id}
+    // Deletes a post. Admins bypass the ownership restriction.
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeletePost(string id)
     {
@@ -86,7 +96,8 @@ public class PostsController : ControllerBase
         var post = await _db.Posts.Find(x => x.Id == id).FirstOrDefaultAsync();
         if (post == null) return NotFound("Post not found");
 
-        //  FIXED LOGIC
+        // Role Authorization Check:
+        // Blocks termination if the user isn't an Admin AND doesn't own the post
         if (role != "Admin" && post.CreatedByUserId != userId)
         {
             return Forbid("You can only delete your own posts.");

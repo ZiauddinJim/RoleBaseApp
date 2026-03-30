@@ -37,7 +37,7 @@ const Register = () => {
       </div>
 
       <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-transparent dark:border-gray-700 transition-colors duration-200">
-        <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">📋 RoleBase</h2>
+        <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">RoleBase</h2>
         <p className="text-gray-500 dark:text-gray-400 mb-6">Create your account</p>
 
         {error && (
@@ -75,7 +75,7 @@ const Register = () => {
             {errors.email && <p className="text-red-500 dark:text-red-400 text-xs mt-1">{errors.email.message}</p>}
           </div>
 
-          {/* Role Selection */}
+          {/* Role Selection - Determines privilege limits on the platform */}
           <div>
             <label className="text-sm font-semibold text-gray-500 dark:text-gray-400">Select Role</label>
             <div className="relative mt-1">

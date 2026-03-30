@@ -22,8 +22,8 @@ public class AuthController : ControllerBase
     }
 
 
-    // TODO: Register New User
-
+    // POST: /api/auth/register
+    // Handles user registration and enforces role assignment safely
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
     {
@@ -38,6 +38,7 @@ public class AuthController : ControllerBase
         var existing = await _db.Users.Find(x => x.Email == dto.Email).FirstOrDefaultAsync();
         if (existing != null)
             return BadRequest("Email already exists");
+        // Restrict role to known valid roles (Defaults to User if unspecified)
         var assignedRole = "User";
         if (dto.Role == "Admin") assignedRole = "Admin";
         
@@ -55,8 +56,8 @@ public class AuthController : ControllerBase
     }
 
 
-    // TODO: User Login
-
+    // POST: /api/auth/login
+    // Validates credentials and returns a JWT token representing user identity and role
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDto dto)
     {
@@ -70,10 +71,18 @@ public class AuthController : ControllerBase
         // GENERATE: JWT Token
         var token = _jwt.GenerateToken(user);
 
-        // RETURN: Token + Role + UserId
-        return Ok(new { token, role = user.Role, userId = user.Id });
+        // RETURN: Token + Role + UserId + Name + Email
+        return Ok(new { 
+            token, 
+            role = user.Role, 
+            userId = user.Id, 
+            name = user.Name, 
+            email = user.Email 
+        });
     }
 
+    // GET: /api/auth/users/count
+    // Admin-only route to retrieve total application user count
     [Authorize(Roles = "Admin")]
     [HttpGet("users/count")]
     public async Task<IActionResult> GetUsersCount()
