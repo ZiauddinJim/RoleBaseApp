@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { LayoutDashboard, FileText, LogOut, Plus, Users } from "lucide-react";
 import API from "../API/api";
 import PostList from "../components/PostList";
+import PostGrid from "../components/PostGrid";
 import PostModal from "../components/PostModal";
 import ThemeToggle from "../components/ThemeToggle";
 
@@ -16,6 +17,7 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [activeTab, setActiveTab] = useState("my_posts"); // useful for User role
+  const [activeMenu, setActiveMenu] = useState("dashboard"); // sidebar navigation
 
   const fetchData = async () => {
     try {
@@ -83,10 +85,24 @@ const Dashboard = () => {
         </div>
 
         <nav className="flex-1 px-4 space-y-2">
-          <a className="flex items-center gap-2 p-2 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 cursor-pointer">
+          <a 
+            onClick={() => setActiveMenu("dashboard")}
+            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
+              activeMenu === "dashboard" 
+                ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400"
+                : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+          >
             <LayoutDashboard size={18} /> Dashboard
           </a>
-          <a className="flex items-center gap-2 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">
+          <a 
+            onClick={() => setActiveMenu("posts")}
+            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
+              activeMenu === "posts" 
+                ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400"
+                : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+          >
             <FileText size={18} /> Posts
           </a>
         </nav>
@@ -136,8 +152,9 @@ const Dashboard = () => {
         {/* Content */}
         <div className="p-6 space-y-6 overflow-y-auto">
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Stats - Only visible on Dashboard menu */}
+          {activeMenu === "dashboard" && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {isAdmin ? (
               <>
                 <div className="bg-white dark:bg-gray-800 p-4 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
@@ -170,6 +187,7 @@ const Dashboard = () => {
               </>
             )}
           </div>
+          )}
 
           {/* Table */}
           <div className="bg-white dark:bg-gray-800 rounded shadow dark:shadow-none border border-transparent dark:border-gray-700 transition-colors duration-200">
@@ -210,13 +228,23 @@ const Dashboard = () => {
               </button>
             </div>
 
-            <PostList
-              posts={displayedPosts}
-              role={role}
-              userId={userId}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+            {activeMenu === "dashboard" ? (
+              <PostList
+                posts={displayedPosts}
+                role={role}
+                userId={userId}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ) : (
+              <PostGrid
+                posts={posts} // Posts screen always shows ALL posts as requested
+                role={role}
+                userId={userId}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            )}
           </div>
         </div>
       </main>
