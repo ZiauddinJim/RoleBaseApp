@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
 /* Enable class-based manual dark mode for Tailwind v4 */
 @custom-variant dark (&:where(.dark, .dark *));
