@@ -1,35 +1,30 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize] // All routes here require the user to be logged in via valid JWT token
+[Authorize]
 public class PostsController : ControllerBase
 {
-    private readonly MongoDbService _db;
+    private readonly ApplicationDbContext _db;
 
-    public PostsController(MongoDbService db)
+    public PostsController(ApplicationDbContext db)
     {
         _db = db;
     }
 
-    // GET: /api/posts
-    // Retrieves a descending list of all posts.
-    // Dashboard frontend will filter the presentation of these records based on user role.
     [HttpGet]
     public async Task<IActionResult> GetPosts()
     {
-        var posts = await _db.Posts.Find(_ => true)
-            .SortByDescending(x => x.CreatedAt)
+        var posts = await _db.Posts
+            .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
-            
+
         return Ok(posts);
     }
 
-    // POST: /api/posts
-    // Creates a new post. Both Admin and User roles are authorized to create new records.
     [HttpPost]
     public async Task<IActionResult> CreatePost([FromBody] CreatePostDto dto)
     {
@@ -41,35 +36,34 @@ public class PostsController : ControllerBase
 
         var post = new Post
         {
+            Id = Guid.NewGuid(),
             Title = dto.Title,
-            Content = dto.Content,
-            CreatedByUserId = userId
+            Content = dto.Content ?? string.Empty,
+            CreatedByUserId = userId,
+            CreatedAt = DateTime.UtcNow
         };
 
-        await _db.Posts.InsertOneAsync(post);
+        _db.Posts.Add(post);
+        await _db.SaveChangesAsync();
         return Ok(post);
     }
 
-    [Authorize]
-    // PUT: /api/posts/{id}
-    // Edits a post. Users can only edit their own post. Admins can edit any post.
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdatePost(string id, [FromBody] UpdatePostDto dto)
     {
+        if (!Guid.TryParse(id, out var postId))
+            return BadRequest("Invalid post id");
+
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var role = User.FindFirst(ClaimTypes.Role)?.Value;
 
         if (userId == null) return Unauthorized();
 
-        var post = await _db.Posts.Find(x => x.Id == id).FirstOrDefaultAsync();
+        var post = await _db.Posts.FindAsync(postId);
         if (post == null) return NotFound("Post not found");
 
-        // Role Authorization Check: 
-        // Blocks the update if the user isn't an Admin AND doesn't own the post
         if (role != "Admin" && post.CreatedByUserId != userId)
-        {
             return Forbid("You can only edit your own posts.");
-        }
 
         if (!string.IsNullOrWhiteSpace(dto.Title))
             post.Title = dto.Title;
@@ -77,33 +71,30 @@ public class PostsController : ControllerBase
         if (!string.IsNullOrWhiteSpace(dto.Content))
             post.Content = dto.Content;
 
-        await _db.Posts.ReplaceOneAsync(x => x.Id == id, post);
+        await _db.SaveChangesAsync();
 
         return Ok(new { message = "Post updated successfully" });
     }
 
-    [Authorize]
-    // DELETE: /api/posts/{id}
-    // Deletes a post. Admins bypass the ownership restriction.
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeletePost(string id)
     {
+        if (!Guid.TryParse(id, out var postId))
+            return BadRequest("Invalid post id");
+
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var role = User.FindFirst(ClaimTypes.Role)?.Value;
 
         if (userId == null) return Unauthorized();
 
-        var post = await _db.Posts.Find(x => x.Id == id).FirstOrDefaultAsync();
+        var post = await _db.Posts.FindAsync(postId);
         if (post == null) return NotFound("Post not found");
 
-        // Role Authorization Check:
-        // Blocks termination if the user isn't an Admin AND doesn't own the post
         if (role != "Admin" && post.CreatedByUserId != userId)
-        {
             return Forbid("You can only delete your own posts.");
-        }
 
-        await _db.Posts.DeleteOneAsync(x => x.Id == id);
+        _db.Posts.Remove(post);
+        await _db.SaveChangesAsync();
 
         return Ok(new { message = "Post deleted successfully" });
     }

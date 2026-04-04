@@ -1,22 +1,33 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-// Create builder (entry point of the application)
 var builder = WebApplication.CreateBuilder(args);
 
-// Support Render's PORT environment variable for deployment
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5138";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
-// Register MongoDB and JWT services for Dependency Injection
-builder.Services.AddSingleton<MongoDbService>();
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+builder.Services
+    .AddIdentity<ApplicationUser, IdentityRole>(options =>
+    {
+        options.Password.RequiredLength = 6;
+        options.User.RequireUniqueEmail = true;
+    })
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
 builder.Services.AddSingleton<JwtService>();
 
-// Enable controllers (API support)
 builder.Services.AddControllers();
 
-// Enable CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -28,41 +39,46 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Configure JWT Authentication
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
 .AddJwtBearer(options =>
 {
-    // Get secret key from appsettings.json
     var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!);
 
-    // Set token validation parameters
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuerSigningKey = true, // validate signature
-        IssuerSigningKey = new SymmetricSecurityKey(key), // secret key
-
-        ValidateIssuer = false,   // issuer validation off
-        ValidateAudience = false  // audience validation off
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false,
+        ValidateAudience = false
     };
 });
 
-// Enable Authorization (role-based access)
 builder.Services.AddAuthorization();
 
-// Build the application
 var app = builder.Build();
 
-// Enable CORS Middleware (must be before routing/auth)
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    foreach (var roleName in new[] { "Admin", "User" })
+    {
+        if (!await roleManager.RoleExistsAsync(roleName))
+            await roleManager.CreateAsync(new IdentityRole(roleName));
+    }
+}
+
 app.UseCors("AllowAll");
 
-// Middleware: Authentication (check token)
 app.UseAuthentication();
-
-// Middleware: Authorization (check role/permission)
 app.UseAuthorization();
 
-// Map controller routes (api endpoints)
 app.MapControllers();
 
-// Run the application
 app.Run();
