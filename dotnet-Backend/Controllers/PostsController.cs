@@ -1,3 +1,8 @@
+/*
+ * PostsController — CRUD posts with permission policies + ownership rules.
+ * CAUSE: Edit/delete require posts.edit_own/delete_own policy; ownership bypass uses posts.manage_all
+ *        so admins do not need separate code paths for role name strings.
+ */
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +21,7 @@ public class PostsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = "Perm:" + PermissionKeys.PostsView)]
     public async Task<IActionResult> GetPosts()
     {
         var posts = await _db.Posts
@@ -26,6 +32,7 @@ public class PostsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "Perm:" + PermissionKeys.PostsCreate)]
     public async Task<IActionResult> CreatePost([FromBody] CreatePostDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Title))
@@ -49,21 +56,21 @@ public class PostsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = "Perm:" + PermissionKeys.PostsEditOwn)]
     public async Task<IActionResult> UpdatePost(string id, [FromBody] UpdatePostDto dto)
     {
         if (!Guid.TryParse(id, out var postId))
             return BadRequest("Invalid post id");
 
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var role = User.FindFirst(ClaimTypes.Role)?.Value;
-
         if (userId == null) return Unauthorized();
 
         var post = await _db.Posts.FindAsync(postId);
         if (post == null) return NotFound("Post not found");
 
-        if (role != "Admin" && post.CreatedByUserId != userId)
-            return Forbid("You can only edit your own posts.");
+        var canManageAll = User.HasAppPermission(PermissionKeys.PostsManageAll);
+        if (!canManageAll && post.CreatedByUserId != userId)
+            return Forbid();
 
         if (!string.IsNullOrWhiteSpace(dto.Title))
             post.Title = dto.Title;
@@ -77,21 +84,21 @@ public class PostsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "Perm:" + PermissionKeys.PostsDeleteOwn)]
     public async Task<IActionResult> DeletePost(string id)
     {
         if (!Guid.TryParse(id, out var postId))
             return BadRequest("Invalid post id");
 
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var role = User.FindFirst(ClaimTypes.Role)?.Value;
-
         if (userId == null) return Unauthorized();
 
         var post = await _db.Posts.FindAsync(postId);
         if (post == null) return NotFound("Post not found");
 
-        if (role != "Admin" && post.CreatedByUserId != userId)
-            return Forbid("You can only delete your own posts.");
+        var canManageAll = User.HasAppPermission(PermissionKeys.PostsManageAll);
+        if (!canManageAll && post.CreatedByUserId != userId)
+            return Forbid();
 
         _db.Posts.Remove(post);
         await _db.SaveChangesAsync();
