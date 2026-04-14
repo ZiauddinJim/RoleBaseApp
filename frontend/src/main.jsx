@@ -1,3 +1,6 @@
+/**
+ * Vite + React entry. ThemeProvider sets `dark` class + DaisyUI `data-theme` for light/dark.
+ */
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'

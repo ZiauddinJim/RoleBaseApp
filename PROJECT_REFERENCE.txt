@@ -1,0 +1,38 @@
+RoleBaseApp — quick orientation (read this when you open the repo)
+=====================================================================
+
+WHAT IT IS
+  Full-stack role/permission app: .NET 10 API + SQL Server + React (Vite) + DaisyUI/Tailwind.
+  Users log in with email OR public User ID (RB-…). JWT includes permission claims.
+
+WHERE TO START READING CODE
+  Backend:  dotnet-Backend/Program.cs          (DI, auth, migrate, seed)
+            dotnet-Backend/Data/DbSeeder.cs     (default roles + permissions)
+            dotnet-Backend/PermissionKeys.cs    (all permission string constants)
+  Frontend: frontend/src/App.jsx               (all routes + route guards)
+            frontend/src/context/AuthContext.jsx
+            frontend/src/lib/permissionKeys.js  (must match backend keys)
+
+MAIN API AREAS (route prefix api/)
+  /auth/*           Register, login, me, passwords, user count (admin)
+  /onboarding/*     Multi-step draft + complete
+  /posts/*          Posts with Perm: policies
+  /permissions/*    Admin permission CRUD
+  /roles/*          Admin roles + permission mapping
+  /admin/users/*    Assign roles to users
+  /submissions/*    Own submission vs admin list all
+
+WHY KEY DECISIONS (CAUSE)
+  • JWT not cookies: SPA + API; default scheme is Bearer.
+  • "Perm:key" policies: no need to register every policy in Program.cs.
+  • system.fullaccess: Admin role can pass any permission check without updating JWT for each new key.
+  • /auth/me on load: permissions in localStorage stay fresh if admin changes roles.
+  • Email optional: without SMTP config, LoggingEmailSender logs instead of sending.
+
+RUN
+  Backend:  cd dotnet-Backend && dotnet run
+  Frontend: cd frontend && npm run dev
+  Env:      frontend VITE_API_URL if API is not http://localhost:5138/api
+
+NOTE
+  Detailed file-level comments are in source (look for /* PURPOSE */, CAUSE:, FLOW:).
