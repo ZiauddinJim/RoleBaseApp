@@ -31,6 +31,8 @@ namespace dotnet_Backend.Migrations
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PublicUserId = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: true),
+                    MustChangePassword = table.Column<bool>(type: "bit", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -52,6 +54,20 @@ namespace dotnet_Backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Permissions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Key = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Permissions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Posts",
                 columns: table => new
                 {
@@ -64,6 +80,22 @@ namespace dotnet_Backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Posts", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RegistrationDrafts",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DraftToken = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    Step1Json = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Step2Json = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Step3Json = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ExpiresAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RegistrationDrafts", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -172,6 +204,53 @@ namespace dotnet_Backend.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "UserFormSubmissions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    PublicUserId = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    Step1Json = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Step2Json = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Step3Json = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SubmittedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserFormSubmissions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserFormSubmissions_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RolePermissions",
+                columns: table => new
+                {
+                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    PermissionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RolePermissions", x => new { x.RoleId, x.PermissionId });
+                    table.ForeignKey(
+                        name: "FK_RolePermissions_AspNetRoles_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RolePermissions_Permissions_PermissionId",
+                        column: x => x.PermissionId,
+                        principalTable: "Permissions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -205,6 +284,13 @@ namespace dotnet_Backend.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_PublicUserId",
+                table: "AspNetUsers",
+                column: "PublicUserId",
+                unique: true,
+                filter: "[PublicUserId] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
@@ -212,9 +298,31 @@ namespace dotnet_Backend.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Permissions_Key",
+                table: "Permissions",
+                column: "Key",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Posts_CreatedAt",
                 table: "Posts",
                 column: "CreatedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegistrationDrafts_DraftToken",
+                table: "RegistrationDrafts",
+                column: "DraftToken",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RolePermissions_PermissionId",
+                table: "RolePermissions",
+                column: "PermissionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserFormSubmissions_UserId",
+                table: "UserFormSubmissions",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -239,7 +347,19 @@ namespace dotnet_Backend.Migrations
                 name: "Posts");
 
             migrationBuilder.DropTable(
+                name: "RegistrationDrafts");
+
+            migrationBuilder.DropTable(
+                name: "RolePermissions");
+
+            migrationBuilder.DropTable(
+                name: "UserFormSubmissions");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "Permissions");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

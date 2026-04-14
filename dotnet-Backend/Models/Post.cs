@@ -1,3 +1,4 @@
+/* Post — CreatedByUserId matches ApplicationUser.Id (string) for ownership checks. */
 public class Post
 {
     public Guid Id { get; set; }
